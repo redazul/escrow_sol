@@ -5,13 +5,17 @@ use solana_program::{
     msg,
     program_error::ProgramError,
     pubkey::Pubkey,
+    sysvar::{rent::Rent, Sysvar},
 };
 
 use spl_token::instruction::transfer;
 use solana_program::program::invoke;
+use spl_token::state::Account as TokenAccount;
+use solana_program::program_pack::Pack;
 
 use crate::instruction::CounterInstruction;
 use crate::state::Escrow;
+
 
 pub struct Processor {}
 
@@ -51,30 +55,66 @@ impl Processor {
                 
                 // { key: DgeNUoaYCr5dQrDuCWp1SwgZ4um9NR46xqCNwGyd9EF6, owner: 11111111111111111111111111111111, is_signer: true, is_writable: true, executable: false, rent_epoch: 323, lamports: 25486670200, data.len: 0, .. }
 
-        
+                
+                //create pda account 
+                let pda_account_ix = solana_program::system_instruction::create_account(
+                    feepayer.key, 
+                    &pda, 
+                    Rent::get()?.minimum_balance(TokenAccount::LEN), // enough sol to pay for rent 
+                    TokenAccount::LEN as u64, //space to hold meta data
+                    _program_id,
+                );
 
-                //build ix
-                let tx_ix = spl_token::instruction::transfer(
-                    token_program_id.key,
-                    spl_token.key,
-                    &pda,
-                    feepayer.key,
-                    &[&feepayer.key],
-                    amount,
+                msg!("TokenProgram sent {:?}",pda_account_ix);
+
+                let res = solana_program::program::invoke_signed(
+                    &pda_account_ix,
+                    &[
+                        feepayer.clone(),
+                        
+                    ],
+                    &[&[b"escrow"],&[&[_nonce]]]
                 )?;
+
+                // invoke_signed(
+                //     &system_instruction::create_account(
+                //         user.key,
+                //         tracker_ai.key,
+                //         Rent::get()?.minimum_balance(42),
+                //         42,
+                //         program_id,
+                //     ),
+                //     &[user.clone(), tracker_ai.clone(), system_program.clone()],
+                //     &[&[user.key.as_ref(), counter.key.as_ref(), &[bump]]],
+                // )?;
+
+                msg!("Create account response {:?}",res);
+
+
+
+
+                // //build ix
+                // let tx_ix = spl_token::instruction::transfer(
+                //     token_program_id.key,
+                //     spl_token.key,
+                //     &pda,
+                //     feepayer.key,
+                //     &[&feepayer.key],
+                //     amount,
+                // )?;
 
            
 
-                msg!("The build instruction {:?}",tx_ix);
-
-                solana_program::program::invoke(
-                    &tx_ix,
-                    &[
-                        feepayer.clone(),
-                        spl_token.clone(),
-                        token_program_id.clone()
-                    ],
-                )?;
+                // msg!("The build instruction {:?}",tx_ix);
+                // solana_program::program::invoke(
+                //     &tx_ix,
+                //     &[
+                //         feepayer.clone(),
+                //         spl_token.clone(),
+                //         token_program_id.clone(),
+                //         &pda
+                //     ],
+                // )?;
 
 
 
