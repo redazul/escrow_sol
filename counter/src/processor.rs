@@ -56,25 +56,25 @@ impl Processor {
                 // { key: DgeNUoaYCr5dQrDuCWp1SwgZ4um9NR46xqCNwGyd9EF6, owner: 11111111111111111111111111111111, is_signer: true, is_writable: true, executable: false, rent_epoch: 323, lamports: 25486670200, data.len: 0, .. }
 
                 
-                //create pda account 
-                let pda_account_ix = solana_program::system_instruction::create_account(
-                    feepayer.key, 
-                    &pda, 
-                    Rent::get()?.minimum_balance(TokenAccount::LEN), // enough sol to pay for rent 
-                    TokenAccount::LEN as u64, //space to hold meta data
-                    _program_id,
-                );
+                // //create pda account 
+                // let pda_account_ix = solana_program::system_instruction::create_account(
+                //     feepayer.key, 
+                //     &pda, 
+                //     Rent::get()?.minimum_balance(TokenAccount::LEN), // enough sol to pay for rent 
+                //     TokenAccount::LEN as u64, //space to hold meta data
+                //     _program_id,
+                // );
 
-                msg!("TokenProgram sent {:?}",pda_account_ix);
+                // msg!("TokenProgram sent {:?}",pda_account_ix);
 
-                let res = solana_program::program::invoke_signed(
-                    &pda_account_ix,
-                    &[
-                        feepayer.clone(),
+                // let res = solana_program::program::invoke_signed(
+                //     &pda_account_ix,
+                //     &[
+                //         feepayer.clone(),
                         
-                    ],
-                    &[&[b"escrow"],&[&[_nonce]]]
-                )?;
+                //     ],
+                //     &[&[b"escrow"],&[&[_nonce]]]
+                // )?;
 
                 // invoke_signed(
                 //     &system_instruction::create_account(
@@ -88,7 +88,7 @@ impl Processor {
                 //     &[&[user.key.as_ref(), counter.key.as_ref(), &[bump]]],
                 // )?;
 
-                msg!("Create account response {:?}",res);
+                // msg!("Create account response {:?}",res);
 
 
 
