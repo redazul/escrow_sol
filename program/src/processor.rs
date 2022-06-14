@@ -21,7 +21,7 @@ pub struct Processor {}
 
 impl Processor {
     pub fn process_instruction(
-        _program_id: &Pubkey,
+        program_id: &Pubkey,
         accounts: &[AccountInfo],
         instruction_data: &[u8],
     ) -> ProgramResult {
@@ -35,9 +35,10 @@ impl Processor {
 
                 //pda 
                 msg!("1st Seed used is {:?}",&[b"escrow"]);
-                msg!("2nd Seed used is {:?}",_program_id);
-                let (pda, _nonce) = Pubkey::find_program_address(&[b"escrow"], _program_id);
+                msg!("2nd Seed used is {:?}",&program_id);
+                let (pda, bump_seed) = Pubkey::find_program_address(&[b"escrow"], &program_id);
                 msg!("Program PDA is {}",pda);
+                msg!("PDA bump is {}",bump_seed);
 
                 //data passed
                 //Program logged: "Program PDA is EfR6jhPA9P89YxLnFGRAXkganxT5WiFAUpQ59geTHSEt"
@@ -66,11 +67,11 @@ impl Processor {
                 
                 //create pda account 
                 let pda_account_ix = solana_program::system_instruction::create_account(
-                    feepayer.key, 
-                    pda_account.key, 
+                    &feepayer.key, 
+                    &pda_account.key, 
                     Rent::get()?.minimum_balance(TokenAccount::LEN), // enough sol to pay for rent 
                     TokenAccount::LEN as u64, //space to hold meta data
-                    _program_id,
+                    program_id,
                 );
 
                 msg!("TokenProgram sent {:?}",pda_account_ix);
@@ -80,9 +81,9 @@ impl Processor {
                     &[
                         feepayer.clone(),
                         pda_account.clone(),
-                        system_program.clone()                   
+                        system_program.clone(),
                     ],
-                    &[&[b"escrow"],&[&[_nonce]]]
+                    &[&[b"escrow", &[bump_seed]]],
                 )?;
 
                 msg!("Res:  {:?}",res);
