@@ -53,13 +53,13 @@ impl Processor {
                 //msg!("system_program sent {:?}",system_program);
 
                 let user_token = next_account_info(accounts_iter)?;
-                msg!("user_token {:?}",user_token.data);
+                msg!("user_token {:?}",user_token);
 
                 let spl_token = next_account_info(accounts_iter)?;
                 msg!("spl_token {:?}",spl_token);
 
-                // let token_account_mint = get_token_account_mint(user_token.data);
-                // msg!("token_account_mint {:?}",token_account_mint.data);
+                let token_account_mint = solana_account_decoder::parse_token::get_token_account_mint(&user_token.data.borrow());
+                
 
 
                
