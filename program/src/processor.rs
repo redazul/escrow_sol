@@ -8,20 +8,27 @@ use solana_program::{
     sysvar::{rent::Rent, Sysvar},
 };
 
-use spl_token::instruction::transfer;
-use solana_program::program::invoke;
-use spl_token::state::Account as TokenAccount;
-use solana_program::program_pack::Pack;
+use solana_account_decoder::parse_token::get_token_account_mint;
 
 use crate::instruction::CounterInstruction;
-use crate::state::Escrow;
+use crate::state::Counter;
 
+//error
+pub fn assert_with_msg(statement: bool, err: ProgramError, msg: &str) -> ProgramResult {
+    if !statement {
+        msg!(msg);
+        Err(err)
+    } else {
+        Ok(())
+    }
+}
 
 pub struct Processor {}
 
+
 impl Processor {
     pub fn process_instruction(
-        program_id: &Pubkey,
+        _program_id: &Pubkey,
         accounts: &[AccountInfo],
         instruction_data: &[u8],
     ) -> ProgramResult {
@@ -29,67 +36,64 @@ impl Processor {
             .map_err(|_| ProgramError::InvalidInstructionData)?;
 
         match instruction {
-            
-            CounterInstruction::InitEscrow{amount}=> {
-                msg!("Instruction: Init Escrow");
-
-                //pda 
-                msg!("1st Seed used is {:?}",&[b"escrow"]);
-                msg!("2nd Seed used is {:?}",&program_id);
-                let (pda, bump_seed) = Pubkey::find_program_address(&[b"escrow"], &program_id);
-                msg!("Program PDA is {}",pda);
-                msg!("PDA bump is {}",bump_seed);
-
-                //data passed
-                //Program logged: "Program PDA is EfR6jhPA9P89YxLnFGRAXkganxT5WiFAUpQ59geTHSEt"
-                msg!("Data sent {}",amount);
-                //Program logged: "Data sent 100"
-
+            CounterInstruction::Increment => {
+                //msg!("Instruction: Increment");
                 let accounts_iter = &mut accounts.iter();
 
-                let feepayer = next_account_info(accounts_iter)?;
-                msg!("FeePayer sent {:?}",feepayer);
+                let payer_account_info = next_account_info(accounts_iter)?;
+                //msg!("payer_account_info sent {:?}",payer_account_info);
 
-                let spl_token = next_account_info(accounts_iter)?;
-                msg!("Spl Token sent {:?}",spl_token);
+                let pda_account_info = next_account_info(accounts_iter)?;
+                //msg!("pda_account_info sent {:?}",pda_account_info);
 
-                let token_program_id = next_account_info(accounts_iter)?;
-                msg!("TokenProgram sent {:?}",token_program_id);
-
-                let pda_account = next_account_info(accounts_iter)?;
-                msg!("PDA sent {:?}",pda_account);
+                let sys_var = next_account_info(accounts_iter)?;
+               // msg!("sys_var sent {:?}",sys_var);
 
                 let system_program = next_account_info(accounts_iter)?;
-                msg!("system_program sent {:?}",system_program);
-                
-                // { key: DgeNUoaYCr5dQrDuCWp1SwgZ4um9NR46xqCNwGyd9EF6, owner: 11111111111111111111111111111111, is_signer: true, is_writable: true, executable: false, rent_epoch: 323, lamports: 25486670200, data.len: 0, .. }
+                //msg!("system_program sent {:?}",system_program);
 
-                
-                //create pda account 
-                let pda_account_ix = solana_program::system_instruction::create_account(
-                    &feepayer.key, 
-                    &pda_account.key, 
-                    Rent::get()?.minimum_balance(TokenAccount::LEN), // enough sol to pay for rent 
-                    TokenAccount::LEN as u64, //space to hold meta data
-                    program_id,
-                );
+                let user_token = next_account_info(accounts_iter)?;
+                msg!("user_token {:?}",user_token.data);
 
-                msg!("TokenProgram sent {:?}",pda_account_ix);
+                let spl_token = next_account_info(accounts_iter)?;
+                msg!("spl_token {:?}",spl_token);
 
-                let res = solana_program::program::invoke_signed(
-                    &pda_account_ix,
-                    &[
-                        feepayer.clone(),
-                        pda_account.clone(),
-                        system_program.clone(),
-                    ],
-                    &[&[b"escrow", &[bump_seed]]],
-                )?;
+                // let token_account_mint = get_token_account_mint(user_token.data);
+                // msg!("token_account_mint {:?}",token_account_mint.data);
 
-                msg!("Res:  {:?}",res);
 
-  
+               
 
+                //create pda account
+                // let (pda_info, bump) = Pubkey::find_program_address(&[b"crankpay_seed"], _program_id);
+
+                // msg!("pda_info {:?}",pda_info);
+
+                // msg!("bump {:?}",bump);
+
+                // solana_program::program::invoke_signed(
+
+                //     //instruction
+                //     &solana_program::system_instruction::create_account(
+                //         payer_account_info.key,
+                //         pda_account_info.key,
+                //         Rent::get()?.minimum_balance(8),
+                //         8,
+                //         _program_id,
+                //     ),
+                //     //accounts_info
+                //     &[payer_account_info.clone(), pda_account_info.clone(), system_program.clone()],
+
+                //     //signers_seeds
+                //     &[&[b"crankpay_seed", &[bump]]],
+                // )?;
+
+
+
+
+
+
+ 
 
 
             }
